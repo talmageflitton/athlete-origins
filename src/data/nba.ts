@@ -1,0 +1,53 @@
+import type { Athlete } from '../types';
+
+export const nbaAthletes: Athlete[] = [
+  // 2020s
+  { id: 'nba-001', name: 'Luka Doncic', sport: 'nba', team: 'Los Angeles Lakers', position: 'PG', college: 'None (International)', draftPick: 'Round 1, Pick 3', hometown: 'Ljubljana, Slovenia', jerseyNumber: 77, era: '2020s' },
+  { id: 'nba-002', name: 'Jayson Tatum', sport: 'nba', team: 'Boston Celtics', position: 'SF', college: 'Duke', draftPick: 'Round 1, Pick 3', hometown: 'St. Louis, Missouri', jerseyNumber: 0, era: '2020s' },
+  { id: 'nba-003', name: 'Nikola Jokic', sport: 'nba', team: 'Denver Nuggets', position: 'C', college: 'None (International)', draftPick: 'Round 2, Pick 41', hometown: 'Sombor, Serbia', jerseyNumber: 15, era: '2020s' },
+  { id: 'nba-004', name: 'Shai Gilgeous-Alexander', sport: 'nba', team: 'Oklahoma City Thunder', position: 'SG', college: 'Kentucky', draftPick: 'Round 1, Pick 11', hometown: 'Toronto, Canada', jerseyNumber: 2, era: '2020s' },
+  { id: 'nba-005', name: 'Anthony Edwards', sport: 'nba', team: 'Minnesota Timberwolves', position: 'SG', college: 'Georgia', draftPick: 'Round 1, Pick 1', hometown: 'Atlanta, Georgia', jerseyNumber: 5, era: '2020s' },
+  { id: 'nba-006', name: 'Ja Morant', sport: 'nba', team: 'Memphis Grizzlies', position: 'PG', college: 'Murray State', draftPick: 'Round 1, Pick 2', hometown: 'Dalzell, South Carolina', jerseyNumber: 12, era: '2020s' },
+  { id: 'nba-007', name: 'Tyrese Haliburton', sport: 'nba', team: 'Indiana Pacers', position: 'PG', college: 'Iowa State', draftPick: 'Round 1, Pick 12', hometown: 'Oshkosh, Wisconsin', jerseyNumber: 0, era: '2020s' },
+  { id: 'nba-008', name: 'Paolo Banchero', sport: 'nba', team: 'Orlando Magic', position: 'PF', college: 'Duke', draftPick: 'Round 1, Pick 1', hometown: 'Seattle, Washington', jerseyNumber: 5, era: '2020s' },
+  { id: 'nba-009', name: 'Victor Wembanyama', sport: 'nba', team: 'San Antonio Spurs', position: 'C', college: 'None (International)', draftPick: 'Round 1, Pick 1', hometown: 'Le Chesnay, France', jerseyNumber: 1, era: '2020s' },
+  { id: 'nba-010', name: 'Chet Holmgren', sport: 'nba', team: 'Oklahoma City Thunder', position: 'PF', college: 'Gonzaga', draftPick: 'Round 1, Pick 2', hometown: 'Minneapolis, Minnesota', jerseyNumber: 7, era: '2020s' },
+  { id: 'nba-011', name: 'Devin Booker', sport: 'nba', team: 'Phoenix Suns', position: 'SG', college: 'Kentucky', draftPick: 'Round 1, Pick 13', hometown: 'Grand Rapids, Michigan', jerseyNumber: 1, era: '2020s' },
+  { id: 'nba-012', name: 'Trae Young', sport: 'nba', team: 'San Antonio Spurs', position: 'PG', college: 'Oklahoma', draftPick: 'Round 1, Pick 5', hometown: 'Norman, Oklahoma', jerseyNumber: 11, era: '2020s' },
+  // 2010s
+  { id: 'nba-013', name: 'LeBron James', sport: 'nba', team: 'Los Angeles Lakers', position: 'SF', college: 'None (High School)', draftPick: 'Round 1, Pick 1', hometown: 'Akron, Ohio', jerseyNumber: 23, era: '2010s' },
+  { id: 'nba-014', name: 'Stephen Curry', sport: 'nba', team: 'Golden State Warriors', position: 'PG', college: 'Davidson', draftPick: 'Round 1, Pick 7', hometown: 'Charlotte, North Carolina', jerseyNumber: 30, era: '2010s' },
+  { id: 'nba-015', name: 'Kevin Durant', sport: 'nba', team: 'Phoenix Suns', position: 'SF', college: 'Texas', draftPick: 'Round 1, Pick 2', hometown: 'Washington, D.C.', jerseyNumber: 35, era: '2010s' },
+  { id: 'nba-016', name: 'Giannis Antetokounmpo', sport: 'nba', team: 'Milwaukee Bucks', position: 'PF', college: 'None (International)', draftPick: 'Round 1, Pick 15', hometown: 'Athens, Greece', jerseyNumber: 34, era: '2010s' },
+  { id: 'nba-017', name: 'James Harden', sport: 'nba', team: 'Los Angeles Clippers', position: 'SG', college: 'Arizona State', draftPick: 'Round 1, Pick 3', hometown: 'Los Angeles, California', jerseyNumber: 1, era: '2010s' },
+  { id: 'nba-018', name: 'Kawhi Leonard', sport: 'nba', team: 'Los Angeles Clippers', position: 'SF', college: 'San Diego State', draftPick: 'Round 1, Pick 15', hometown: 'Los Angeles, California', jerseyNumber: 2, era: '2010s' },
+  { id: 'nba-019', name: 'Anthony Davis', sport: 'nba', team: 'Los Angeles Lakers', position: 'PF', college: 'Kentucky', draftPick: 'Round 1, Pick 1', hometown: 'Chicago, Illinois', jerseyNumber: 3, era: '2010s' },
+  { id: 'nba-020', name: 'Damian Lillard', sport: 'nba', team: 'Milwaukee Bucks', position: 'PG', college: 'Weber State', draftPick: 'Round 1, Pick 6', hometown: 'Oakland, California', jerseyNumber: 0, era: '2010s' },
+  { id: 'nba-021', name: 'Joel Embiid', sport: 'nba', team: 'Philadelphia 76ers', position: 'C', college: 'Kansas', draftPick: 'Round 1, Pick 3', hometown: 'Yaounde, Cameroon', jerseyNumber: 21, era: '2010s' },
+  { id: 'nba-022', name: 'Russell Westbrook', sport: 'nba', team: 'Los Angeles Clippers', position: 'PG', college: 'UCLA', draftPick: 'Round 1, Pick 4', hometown: 'Long Beach, California', jerseyNumber: 0, era: '2010s' },
+  { id: 'nba-023', name: 'Kyrie Irving', sport: 'nba', team: 'Dallas Mavericks', position: 'PG', college: 'Duke', draftPick: 'Round 1, Pick 1', hometown: 'Melbourne, Australia', jerseyNumber: 11, era: '2010s' },
+  { id: 'nba-024', name: 'Jimmy Butler', sport: 'nba', team: 'Miami Heat', position: 'SF', college: 'Marquette', draftPick: 'Round 1, Pick 30', hometown: 'Houston, Texas', jerseyNumber: 22, era: '2010s' },
+  // 2000s
+  { id: 'nba-025', name: 'Kobe Bryant', sport: 'nba', team: 'Los Angeles Lakers', position: 'SG', college: 'None (High School)', draftPick: 'Round 1, Pick 13', hometown: 'Philadelphia, Pennsylvania', jerseyNumber: 24, era: '2000s' },
+  { id: 'nba-026', name: 'Tim Duncan', sport: 'nba', team: 'San Antonio Spurs', position: 'PF', college: 'Wake Forest', draftPick: 'Round 1, Pick 1', hometown: 'Saint Croix, U.S. Virgin Islands', jerseyNumber: 21, era: '2000s' },
+  { id: 'nba-027', name: 'Dirk Nowitzki', sport: 'nba', team: 'Dallas Mavericks', position: 'PF', college: 'None (International)', draftPick: 'Round 1, Pick 9', hometown: 'Wurzburg, Germany', jerseyNumber: 41, era: '2000s' },
+  { id: 'nba-028', name: 'Dwyane Wade', sport: 'nba', team: 'Miami Heat', position: 'SG', college: 'Marquette', draftPick: 'Round 1, Pick 5', hometown: 'Chicago, Illinois', jerseyNumber: 3, era: '2000s' },
+  { id: 'nba-029', name: 'Carmelo Anthony', sport: 'nba', team: 'Denver Nuggets', position: 'SF', college: 'Syracuse', draftPick: 'Round 1, Pick 3', hometown: 'Brooklyn, New York', jerseyNumber: 15, era: '2000s' },
+  { id: 'nba-030', name: 'Chris Paul', sport: 'nba', team: 'New Orleans Hornets', position: 'PG', college: 'Wake Forest', draftPick: 'Round 1, Pick 4', hometown: 'Winston-Salem, North Carolina', jerseyNumber: 3, era: '2000s' },
+  { id: 'nba-031', name: 'Steve Nash', sport: 'nba', team: 'Phoenix Suns', position: 'PG', college: 'Santa Clara', draftPick: 'Round 1, Pick 15', hometown: 'Johannesburg, South Africa', jerseyNumber: 13, era: '2000s' },
+  { id: 'nba-032', name: 'Allen Iverson', sport: 'nba', team: 'Philadelphia 76ers', position: 'PG', college: 'Georgetown', draftPick: 'Round 1, Pick 1', hometown: 'Hampton, Virginia', jerseyNumber: 3, era: '2000s' },
+  // 1990s
+  { id: 'nba-033', name: 'Michael Jordan', sport: 'nba', team: 'Chicago Bulls', position: 'SG', college: 'North Carolina', draftPick: 'Round 1, Pick 3', hometown: 'Wilmington, North Carolina', jerseyNumber: 23, era: '1990s' },
+  { id: 'nba-034', name: 'Shaquille O\'Neal', sport: 'nba', team: 'Los Angeles Lakers', position: 'C', college: 'LSU', draftPick: 'Round 1, Pick 1', hometown: 'Newark, New Jersey', jerseyNumber: 34, era: '1990s' },
+  { id: 'nba-035', name: 'Hakeem Olajuwon', sport: 'nba', team: 'Houston Rockets', position: 'C', college: 'Houston', draftPick: 'Round 1, Pick 1', hometown: 'Lagos, Nigeria', jerseyNumber: 34, era: '1990s' },
+  { id: 'nba-036', name: 'Karl Malone', sport: 'nba', team: 'Utah Jazz', position: 'PF', college: 'Louisiana Tech', draftPick: 'Round 1, Pick 13', hometown: 'Summerfield, Louisiana', jerseyNumber: 32, era: '1990s' },
+  { id: 'nba-037', name: 'Charles Barkley', sport: 'nba', team: 'Phoenix Suns', position: 'PF', college: 'Auburn', draftPick: 'Round 1, Pick 5', hometown: 'Leeds, Alabama', jerseyNumber: 34, era: '1990s' },
+  { id: 'nba-038', name: 'John Stockton', sport: 'nba', team: 'Utah Jazz', position: 'PG', college: 'Gonzaga', draftPick: 'Round 1, Pick 16', hometown: 'Spokane, Washington', jerseyNumber: 12, era: '1990s' },
+  { id: 'nba-039', name: 'Scottie Pippen', sport: 'nba', team: 'Chicago Bulls', position: 'SF', college: 'Central Arkansas', draftPick: 'Round 1, Pick 5', hometown: 'Hamburg, Arkansas', jerseyNumber: 33, era: '1990s' },
+  { id: 'nba-040', name: 'Patrick Ewing', sport: 'nba', team: 'New York Knicks', position: 'C', college: 'Georgetown', draftPick: 'Round 1, Pick 1', hometown: 'Kingston, Jamaica', jerseyNumber: 33, era: '1990s' },
+  // 1980s
+  { id: 'nba-041', name: 'Magic Johnson', sport: 'nba', team: 'Los Angeles Lakers', position: 'PG', college: 'Michigan State', draftPick: 'Round 1, Pick 1', hometown: 'Lansing, Michigan', jerseyNumber: 32, era: '1980s' },
+  { id: 'nba-042', name: 'Larry Bird', sport: 'nba', team: 'Boston Celtics', position: 'SF', college: 'Indiana State', draftPick: 'Round 1, Pick 6', hometown: 'West Baden Springs, Indiana', jerseyNumber: 33, era: '1980s' },
+  { id: 'nba-043', name: 'Isiah Thomas', sport: 'nba', team: 'Detroit Pistons', position: 'PG', college: 'Indiana', draftPick: 'Round 1, Pick 2', hometown: 'Chicago, Illinois', jerseyNumber: 11, era: '1980s' },
+  { id: 'nba-044', name: 'Dominique Wilkins', sport: 'nba', team: 'Atlanta Hawks', position: 'SF', college: 'Georgia', draftPick: 'Round 1, Pick 3', hometown: 'Paris, France', jerseyNumber: 21, era: '1980s' },
+];
