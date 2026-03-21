@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Root variables ─────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light dark;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-apple-bg dark:bg-apple-bg-dark text-apple-label dark:text-apple-label-dark;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ─── Safe area insets ───────────────────────────────────────────────────── */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ─── Header glass blur ──────────────────────────────────────────────────── */
+.header-blur {
+  @apply bg-apple-card/80 dark:bg-apple-card-dark/80;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* ─── Mystery card ───────────────────────────────────────────────────────── */
+.mystery-card {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.mystery-bg {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+}
+
+.mystery-card--revealed .mystery-bg {
+  background: linear-gradient(135deg, #003d00 0%, #006400 40%, #228b22 100%);
+}
+
+.mystery-shimmer {
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.04) 55%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmerMove 3s ease-in-out infinite;
+}
+
+@keyframes shimmerMove {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ─── Clue cards ─────────────────────────────────────────────────────────── */
+.clue-card {
+  transition: box-shadow 0.2s ease;
+}
+
+.clue-card:last-child {
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.12);
+}
+
+/* ─── Result modal header ────────────────────────────────────────────────── */
+.result-header-win {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+}
+
+.result-header-loss {
+  background: linear-gradient(135deg, #636366 0%, #48484a 100%);
+}
+
+/* ─── Button base ────────────────────────────────────────────────────────── */
+.btn-icon {
+  @apply w-9 h-9 rounded-full flex items-center justify-center
+         text-apple-label dark:text-apple-label-dark
+         bg-transparent
+         active:bg-apple-bg dark:active:bg-apple-card2-dark
+         transition-colors duration-100;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* ─── Selection ──────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(0, 122, 255, 0.2);
+}
+
+/* ─── Focus ring override ────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Number font feature ────────────────────────────────────────────────── */
+.tabular-nums {
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Spin animation ─────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ─── Dark mode auto-detect ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    color-scheme: dark;
+  }
+}
