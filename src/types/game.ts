@@ -1,21 +1,24 @@
 export interface Athlete {
   id: string;
   name: string;
-  position: string;           // 'PG' | 'SG' | 'SF' | 'PF' | 'C'
+  sport: string;           // 'Basketball' | 'Soccer' | 'Tennis' | etc.
+  country: string;         // 'USA' | 'France' | 'Serbia' | etc.
+  region: string;          // birthplace region / city
   birthYear: number;
-  birthCity: string;          // e.g. "Akron, OH" or "Lagos, Nigeria"
-  birthCountry: string;       // 'USA' | 'France' | 'Serbia' | etc.
-  college: string;            // "Duke" | "Kentucky" | "International (France)" | "Lower Merion HS"
-  collegeType: 'college' | 'high_school' | 'international' | 'g_league';
-  draftYear: number;
-  teams: string[];            // key franchises in career
-  era: 'classic' | 'modern' | 'current';
-  emoji: string;              // always 🏀
+  currentTeam: string;     // current club/team or 'Retired'
+  emoji: string;
   aliases: string[];
   clues: readonly [string, string, string, string, string, string];
 }
 
 export type GameStatus = 'playing' | 'won' | 'lost';
+
+export type PowerUpId = 'sport_hint' | 'country_hint';
+
+export interface ActivePowerUp {
+  id: PowerUpId;
+  usedAt: number; // timestamp
+}
 
 export interface GameState {
   date: string;           // YYYY-MM-DD
@@ -25,6 +28,7 @@ export interface GameState {
   status: GameStatus;
   score: number;
   completedAt?: number;
+  usedPowerUps: PowerUpId[];
 }
 
 export interface PlayerStats {
@@ -112,4 +116,9 @@ export const ACHIEVEMENT_META: Record<AchievementId, { title: string; desc: stri
   perfect_score: { title: 'Perfect',         desc: 'Score 1000 points in a game',   icon: '💎' },
   comeback:      { title: 'Comeback Kid',    desc: 'Win after 3 wrong guesses',     icon: '🦾' },
   goat:          { title: 'G.O.A.T.',        desc: 'Reach Champion level',          icon: '🐐' },
+};
+
+export const POWER_UP_META: Record<PowerUpId, { title: string; desc: string; icon: string; cost: number }> = {
+  sport_hint:   { title: 'Sport Hint',   desc: 'Reveal the athlete\'s sport',   icon: '🏅', cost: 40 },
+  country_hint: { title: 'Country Hint', desc: 'Reveal the athlete\'s country', icon: '🌍', cost: 60 },
 };

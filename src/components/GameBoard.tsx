@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { GameState, PlayerStats, Achievement } from '@/types/game';
+import type { GameState, PlayerStats, Achievement, PowerUpId } from '@/types/game';
 import {
   loadGameState,
   saveGameState,
@@ -11,6 +11,7 @@ import {
   submitGuess,
   giveUp,
   processGameResult,
+  usePowerUp,
 } from '@/lib/storage';
 import { getDailyAthlete, getDayNumber } from '@/data/athletes';
 import Header from './Header';
@@ -18,6 +19,7 @@ import MysteryCard from './MysteryCard';
 import ClueReveal from './ClueReveal';
 import GuessInput from './GuessInput';
 import ScoreDisplay from './ScoreDisplay';
+import PowerUpBar from './PowerUpBar';
 import ResultModal from './ResultModal';
 import StatsModal from './StatsModal';
 import HowToPlay from './HowToPlay';
@@ -115,6 +117,15 @@ export default function GameBoard() {
     setGameState(giveUp(gameState));
   }, [gameState]);
 
+  const handlePowerUp = useCallback((id: PowerUpId) => {
+    if (!gameState || !stats) return;
+    const result = usePowerUp(id, gameState, stats);
+    if (!result) return;
+    setGameState(result.gameState);
+    setStats(result.stats);
+    saveStats(result.stats);
+  }, [gameState, stats]);
+
   if (!gameState || !stats) {
     return (
       <div className="min-h-screen bg-apple-bg dark:bg-apple-bg-dark flex items-center justify-center">
@@ -155,6 +166,16 @@ export default function GameBoard() {
           status={gameState.status}
           finalScore={gameState.score}
         />
+
+        {/* Power-ups */}
+        {stats && (
+          <PowerUpBar
+            athlete={athlete}
+            gameState={gameState}
+            stats={stats}
+            onUsePowerUp={handlePowerUp}
+          />
+        )}
 
         {/* Clues */}
         {gameState.revealedClues > 0 && (

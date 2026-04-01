@@ -1,5 +1,5 @@
-import type { GameState, PlayerStats, Achievement, AchievementId } from '@/types/game';
-import { LEVELS, WRONG_GUESS_PENALTY, SCORE_BY_CLUE } from '@/types/game';
+import type { GameState, PlayerStats, Achievement, AchievementId, PowerUpId } from '@/types/game';
+import { LEVELS, WRONG_GUESS_PENALTY, SCORE_BY_CLUE, POWER_UP_META } from '@/types/game';
 import { getDailyAthlete, getTodayString, isCorrectGuess } from '@/data/athletes';
 
 const GAME_STATE_KEY = 'ao_game_state';
@@ -31,6 +31,7 @@ export function defaultGameState(): GameState {
     guesses: [],
     status: 'playing',
     score: 0,
+    usedPowerUps: [],
   };
 }
 
@@ -62,6 +63,8 @@ export function loadGameState(): GameState {
     const today = getTodayString();
     // If saved game is from a different day, start fresh
     if (saved.date !== today) return defaultGameState();
+    // Ensure usedPowerUps exists for games saved before this field was added
+    if (!saved.usedPowerUps) saved.usedPowerUps = [];
     return saved;
   } catch {
     return defaultGameState();
@@ -257,4 +260,36 @@ export function submitGuess(state: GameState, guess: string): GameState {
 export function giveUp(state: GameState): GameState {
   if (state.status !== 'playing') return state;
   return { ...state, status: 'lost', score: 0, completedAt: Date.now() };
+}
+
+// ─── Power-ups ────────────────────────────────────────────────────────────────
+
+export function canUsePowerUp(
+  powerUpId: PowerUpId,
+  gameState: GameState,
+  stats: PlayerStats,
+): boolean {
+  if (gameState.status !== 'playing') return false;
+  if (gameState.usedPowerUps.includes(powerUpId)) return false;
+  const cost = POWER_UP_META[powerUpId].cost;
+  return stats.coins >= cost;
+}
+
+export function usePowerUp(
+  powerUpId: PowerUpId,
+  gameState: GameState,
+  stats: PlayerStats,
+): { gameState: GameState; stats: PlayerStats } | null {
+  if (!canUsePowerUp(powerUpId, gameState, stats)) return null;
+  const cost = POWER_UP_META[powerUpId].cost;
+  return {
+    gameState: {
+      ...gameState,
+      usedPowerUps: [...gameState.usedPowerUps, powerUpId],
+    },
+    stats: {
+      ...stats,
+      coins: stats.coins - cost,
+    },
+  };
 }
