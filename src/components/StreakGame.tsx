@@ -12,46 +12,112 @@ import {
   type StreakScore,
 } from '@/lib/streakStorage';
 
-const QUESTION_TIME = 10; // seconds per question
-const CORRECT_DELAY = 700; // ms to show green before next question
-const WRONG_DELAY = 1200; // ms to show red before game over
+// ─── Constants ────────────────────────────────────────────────────────────────
 
+const QUESTION_TIME = 10;
+const CORRECT_DELAY = 700;
+const WRONG_DELAY = 1400;
+
+// ─── Question types ───────────────────────────────────────────────────────────
+
+type QuestionType = 'country' | 'sport' | 'decade';
 type Phase = 'idle' | 'question' | 'correct' | 'wrong' | 'timeout' | 'gameover';
 
-// Build a deduplicated list of countries from the athlete pool
-const ALL_COUNTRIES = ATHLETES.map((a) => a.country).filter((c, i, arr) => arr.indexOf(c) === i);
-
-function getDistractors(correct: string, count = 3): string[] {
-  const pool = ALL_COUNTRIES.filter((c) => c !== correct);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+interface Question {
+  type: QuestionType;
+  prompt: string;
+  correctAnswer: string;
+  options: string[];
 }
 
-function shuffleArray<T>(arr: T[]): T[] {
+const ALL_COUNTRIES = ATHLETES.map((a) => a.country).filter((c, i, arr) => arr.indexOf(c) === i);
+const ALL_SPORTS = ATHLETES.map((a) => a.sport).filter((s, i, arr) => arr.indexOf(s) === i);
+
+function decadeLabel(year: number): string {
+  return `${Math.floor(year / 10) * 10}s`;
+}
+
+const ALL_DECADES = ATHLETES.map((a) => decadeLabel(a.birthYear)).filter((d, i, arr) => arr.indexOf(d) === i);
+
+function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
+function pickDistractors(correct: string, pool: string[], count = 3): string[] {
+  return shuffle(pool.filter((x) => x !== correct)).slice(0, count);
+}
+
+function buildQuestion(athlete: Athlete): Question {
+  // Rotate question types randomly, weighted toward country (most varied)
+  const roll = Math.random();
+  const type: QuestionType = roll < 0.5 ? 'country' : roll < 0.75 ? 'sport' : 'decade';
+
+  if (type === 'country') {
+    const correct = athlete.country;
+    const options = shuffle([correct, ...pickDistractors(correct, ALL_COUNTRIES)]);
+    return { type, prompt: 'Where is this athlete from?', correctAnswer: correct, options };
+  }
+
+  if (type === 'sport') {
+    const correct = athlete.sport;
+    const options = shuffle([correct, ...pickDistractors(correct, ALL_SPORTS)]);
+    return { type, prompt: 'What sport does this athlete play?', correctAnswer: correct, options };
+  }
+
+  // decade
+  const correct = decadeLabel(athlete.birthYear);
+  const options = shuffle([correct, ...pickDistractors(correct, ALL_DECADES)]);
+  return { type, prompt: 'Which decade was this athlete born in?', correctAnswer: correct, options };
+}
+
+// ─── Milestone config ─────────────────────────────────────────────────────────
+
+const MILESTONES: Record<number, { emoji: string; label: string }> = {
+  5:  { emoji: '🔥', label: 'On fire!' },
+  10: { emoji: '⚡', label: 'Unstoppable!' },
+  15: { emoji: '💎', label: 'Diamond run!' },
+  20: { emoji: '👑', label: 'Legendary!' },
+  25: { emoji: '🐐', label: 'G.O.A.T.' },
+};
+
+// ─── Helper: pick next athlete avoiding recent repeats ────────────────────────
+
 function pickNextAthlete(usedIds: Set<string>): Athlete {
   const available = ATHLETES.filter((a) => !usedIds.has(a.id));
-  // If we've gone through all athletes, reset the used pool
   const pool = available.length > 0 ? available : ATHLETES;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// ─── Build share text ─────────────────────────────────────────────────────────
+
+function buildShareText(streak: number, personalBest: boolean): string {
+  const lines = [
+    `⚡ Athlete Origins – Streak Mode`,
+    `${personalBest ? '🏆 New Personal Best: ' : 'Streak: '}${streak} in a row`,
+    '',
+    'athleteoriginsgame.com/streak',
+  ];
+  return lines.join('\n');
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function StreakGame() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [athlete, setAthlete] = useState<Athlete | null>(null);
-  const [options, setOptions] = useState<string[]>([]);
+  const [question, setQuestion] = useState<Question | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
   const [personalBest, setPersonalBest] = useState(0);
+  const [isNewBest, setIsNewBest] = useState(false);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const [milestone, setMilestone] = useState<{ emoji: string; label: string } | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboard, setLeaderboard] = useState<StreakScore[]>([]);
+  const [copied, setCopied] = useState(false);
   const usedIds = useRef<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load personal best on mount
   useEffect(() => {
     setPersonalBest(loadPersonalBest());
     setLeaderboard(loadLeaderboard());
@@ -64,27 +130,38 @@ export default function StreakGame() {
     }
   }, []);
 
-  const loadNextAthlete = useCallback(() => {
+  const loadNextAthlete = useCallback((nextStreak: number) => {
     const next = pickNextAthlete(usedIds.current);
     usedIds.current.add(next.id);
-    const distractors = getDistractors(next.country);
+    const q = buildQuestion(next);
     setAthlete(next);
-    setOptions(shuffleArray([next.country, ...distractors]));
+    setQuestion(q);
     setSelectedAnswer(null);
     setTimeLeft(QUESTION_TIME);
+
+    // Check for milestone
+    const hit = MILESTONES[nextStreak];
+    if (hit) {
+      setMilestone(hit);
+      setTimeout(() => setMilestone(null), 1800);
+    }
+
     setPhase('question');
   }, []);
 
   const endGame = useCallback((finalStreak: number) => {
     clearTimer();
+    const prev = loadPersonalBest();
+    const newBest = finalStreak > prev;
     savePersonalBest(finalStreak);
     saveLeaderboardEntry(finalStreak);
     setPersonalBest(loadPersonalBest());
     setLeaderboard(loadLeaderboard());
+    setIsNewBest(newBest);
     setPhase('gameover');
   }, [clearTimer]);
 
-  // Countdown timer
+  // Countdown
   useEffect(() => {
     if (phase !== 'question') return;
 
@@ -104,47 +181,69 @@ export default function StreakGame() {
   }, [phase, streak, clearTimer, endGame]);
 
   const handleAnswer = useCallback((answer: string) => {
-    if (phase !== 'question' || !athlete) return;
+    if (phase !== 'question' || !question) return;
     clearTimer();
     setSelectedAnswer(answer);
 
-    if (answer === athlete.country) {
-      const newStreak = streak + 1;
-      setStreak(newStreak);
+    if (answer === question.correctAnswer) {
+      const next = streak + 1;
+      setStreak(next);
       setPhase('correct');
-      setTimeout(() => loadNextAthlete(), CORRECT_DELAY);
+      setTimeout(() => loadNextAthlete(next), CORRECT_DELAY);
     } else {
       setPhase('wrong');
       setTimeout(() => endGame(streak), WRONG_DELAY);
     }
-  }, [phase, athlete, streak, clearTimer, loadNextAthlete, endGame]);
+  }, [phase, question, streak, clearTimer, loadNextAthlete, endGame]);
 
   const handleStart = useCallback(() => {
     usedIds.current = new Set();
     setStreak(0);
+    setIsNewBest(false);
     setSelectedAnswer(null);
-    loadNextAthlete();
+    setMilestone(null);
+    loadNextAthlete(0);
   }, [loadNextAthlete]);
 
+  const handleShare = useCallback(async () => {
+    const text = buildShareText(streak, isNewBest);
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } catch {
+      // ignore
+    }
+  }, [streak, isNewBest]);
+
+  // ── Derived style helpers ──────────────────────────────────────────────────
+
   const timerPct = (timeLeft / QUESTION_TIME) * 100;
-  const timerColor = timeLeft <= 3
-    ? 'bg-apple-red dark:bg-apple-red-dark'
-    : timeLeft <= 5
-      ? 'bg-apple-orange dark:bg-apple-orange-dark'
-      : 'bg-apple-green dark:bg-apple-green-dark';
+  const timerColor =
+    timeLeft <= 3 ? 'bg-apple-red dark:bg-apple-red-dark' :
+    timeLeft <= 5 ? 'bg-apple-orange dark:bg-apple-orange-dark' :
+    'bg-apple-green dark:bg-apple-green-dark';
 
   const getButtonStyle = (option: string) => {
     if (!selectedAnswer && phase === 'question') {
       return 'bg-apple-card dark:bg-apple-card-dark border-apple-separator dark:border-apple-separator-dark text-apple-label dark:text-apple-label-dark hover:border-apple-blue dark:hover:border-apple-blue-dark active:scale-95';
     }
-    if (athlete && option === athlete.country) {
+    if (question && option === question.correctAnswer) {
       return 'bg-apple-green/15 dark:bg-apple-green-dark/15 border-apple-green dark:border-apple-green-dark text-apple-green dark:text-apple-green-dark';
     }
-    if (option === selectedAnswer && option !== athlete?.country) {
-      return 'bg-apple-red/15 dark:bg-apple-red-dark/15 border-apple-red dark:border-apple-red-dark text-apple-red dark:text-apple-red-dark';
+    if (option === selectedAnswer) {
+      return 'bg-apple-red/15 dark:bg-apple-red-dark/15 border-apple-red dark:border-apple-red-dark text-apple-red dark:text-apple-red-dark animate-shake';
     }
     return 'bg-apple-card dark:bg-apple-card-dark border-apple-separator dark:border-apple-separator-dark text-apple-secondary dark:text-apple-secondary-dark opacity-40';
   };
+
+  const streakEmoji = streak >= 25 ? '🐐' : streak >= 20 ? '👑' : streak >= 15 ? '💎' : streak >= 10 ? '⚡' : streak >= 5 ? '🔥' : null;
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-apple-bg dark:bg-apple-bg-dark flex flex-col">
@@ -154,7 +253,7 @@ export default function StreakGame() {
           <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
             <Link
               href="/"
-              className="btn-icon flex items-center gap-1.5 text-[13px] font-medium text-apple-secondary dark:text-apple-secondary-dark"
+              className="btn-icon flex items-center gap-1 text-[13px] font-medium text-apple-secondary dark:text-apple-secondary-dark"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -183,7 +282,7 @@ export default function StreakGame() {
 
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6 pb-24 flex flex-col gap-5">
 
-        {/* ── IDLE STATE ── */}
+        {/* ── IDLE ── */}
         {phase === 'idle' && (
           <div className="flex flex-col items-center gap-6 py-8 text-center animate-slide-up">
             <div className="text-7xl animate-float">⚡</div>
@@ -192,15 +291,15 @@ export default function StreakGame() {
                 Streak Mode
               </h2>
               <p className="text-[15px] text-apple-secondary dark:text-apple-secondary-dark mt-2 leading-relaxed">
-                An athlete&apos;s name is shown. Pick the country they&apos;re from — before the timer runs out.
+                An athlete&apos;s name is shown. Answer before the timer runs out — one mistake ends your run.
               </p>
             </div>
 
             <div className="w-full grid grid-cols-3 gap-3">
               {[
-                { icon: '🌍', label: 'Pick country', sub: '4 choices' },
-                { icon: '⏱️', label: '10 seconds', sub: 'per question' },
-                { icon: '💥', label: 'One mistake', sub: 'ends the run' },
+                { icon: '🌍', label: 'Country', sub: 'Where from?' },
+                { icon: '🏅', label: 'Sport', sub: 'What do they play?' },
+                { icon: '📅', label: 'Decade', sub: 'When born?' },
               ].map((item) => (
                 <div key={item.label} className="flex flex-col items-center gap-1 p-3 rounded-apple bg-apple-card dark:bg-apple-card-dark">
                   <span className="text-2xl">{item.icon}</span>
@@ -228,16 +327,18 @@ export default function StreakGame() {
           </div>
         )}
 
-        {/* ── GAME OVER STATE ── */}
+        {/* ── GAME OVER ── */}
         {phase === 'gameover' && (
           <div className="flex flex-col items-center gap-5 py-6 text-center animate-slide-up">
-            <div className="text-6xl">{streak === 0 ? '😅' : streak >= 10 ? '🏆' : streak >= 5 ? '🔥' : '💪'}</div>
+            <div className="text-6xl animate-bounce-in">
+              {streak === 0 ? '😅' : streak >= 20 ? '👑' : streak >= 10 ? '🏆' : streak >= 5 ? '🔥' : '💪'}
+            </div>
 
             <div>
-              <p className="text-[14px] font-medium text-apple-secondary dark:text-apple-secondary-dark uppercase tracking-wider">
-                {streak > personalBest ? 'New Personal Best!' : 'Game Over'}
+              <p className={`text-[14px] font-semibold uppercase tracking-wider ${isNewBest ? 'text-apple-orange dark:text-apple-orange-dark' : 'text-apple-secondary dark:text-apple-secondary-dark'}`}>
+                {isNewBest ? '🎉 New Personal Best!' : 'Game Over'}
               </p>
-              <p className="text-[52px] font-black tabular-nums text-apple-label dark:text-apple-label-dark leading-none mt-1">
+              <p className="text-[58px] font-black tabular-nums text-apple-label dark:text-apple-label-dark leading-none mt-1">
                 {streak}
               </p>
               <p className="text-[14px] text-apple-secondary dark:text-apple-secondary-dark mt-1">
@@ -245,16 +346,21 @@ export default function StreakGame() {
               </p>
             </div>
 
-            {athlete && (
+            {athlete && question && (
               <div className="w-full p-4 rounded-apple bg-apple-card dark:bg-apple-card-dark border border-apple-separator dark:border-apple-separator-dark text-left">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-apple-secondary dark:text-apple-secondary-dark mb-1">
-                  The answer was
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-apple-secondary dark:text-apple-secondary-dark mb-2">
+                  {phase === 'gameover' ? 'The answer was' : 'Time\'s up'}
                 </p>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{athlete.emoji}</span>
                   <div>
                     <p className="text-[15px] font-bold text-apple-label dark:text-apple-label-dark">{athlete.name}</p>
-                    <p className="text-[13px] text-apple-secondary dark:text-apple-secondary-dark">{athlete.country} · {athlete.sport}</p>
+                    <p className="text-[13px] text-apple-secondary dark:text-apple-secondary-dark">
+                      {question.correctAnswer}
+                      {question.type === 'country' && ` · ${athlete.sport}`}
+                      {question.type === 'sport' && ` · ${athlete.country}`}
+                      {question.type === 'decade' && ` · born ${athlete.birthYear}`}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -268,44 +374,55 @@ export default function StreakGame() {
                 Play Again
               </button>
               <button
-                onClick={() => setShowLeaderboard((s) => !s)}
+                onClick={handleShare}
                 className="px-5 py-4 rounded-apple-lg bg-apple-card dark:bg-apple-card-dark border border-apple-separator dark:border-apple-separator-dark text-apple-label dark:text-apple-label-dark font-semibold text-[14px] active:scale-95 transition-transform"
               >
-                🏆 Scores
+                {copied ? '✓ Copied' : '📤 Share'}
+              </button>
+              <button
+                onClick={() => setShowLeaderboard((s) => !s)}
+                className="px-4 py-4 rounded-apple-lg bg-apple-card dark:bg-apple-card-dark border border-apple-separator dark:border-apple-separator-dark text-apple-label dark:text-apple-label-dark font-semibold text-[14px] active:scale-95 transition-transform"
+              >
+                🏆
               </button>
             </div>
           </div>
         )}
 
-        {/* ── ACTIVE GAME (question / correct / wrong / timeout) ── */}
-        {(phase === 'question' || phase === 'correct' || phase === 'wrong' || phase === 'timeout') && athlete && (
+        {/* ── ACTIVE GAME ── */}
+        {(phase === 'question' || phase === 'correct' || phase === 'wrong' || phase === 'timeout') && athlete && question && (
           <>
-            {/* Streak counter */}
+            {/* Streak + personal best row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-semibold text-apple-secondary dark:text-apple-secondary-dark uppercase tracking-wider">
-                  Streak
-                </span>
-                <span className="text-[26px] font-black tabular-nums text-apple-label dark:text-apple-label-dark leading-none">
+                <span className="text-[13px] font-semibold text-apple-secondary dark:text-apple-secondary-dark uppercase tracking-wider">Streak</span>
+                <span className="text-[28px] font-black tabular-nums text-apple-label dark:text-apple-label-dark leading-none">
                   {streak}
                 </span>
-                {streak > 0 && streak % 5 === 0 && (
-                  <span className="text-xl animate-bounce-in">🔥</span>
+                {streakEmoji && (
+                  <span className="text-xl animate-streak-fire">{streakEmoji}</span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-[13px] text-apple-secondary dark:text-apple-secondary-dark">
-                <span>⭐ Best:</span>
-                <span className="font-bold text-apple-label dark:text-apple-label-dark">{personalBest}</span>
+              <div className="text-[13px] text-apple-secondary dark:text-apple-secondary-dark">
+                ⭐ Best: <span className="font-bold text-apple-label dark:text-apple-label-dark">{personalBest}</span>
               </div>
             </div>
 
             {/* Timer bar */}
             <div className="w-full h-1.5 bg-apple-separator dark:bg-apple-separator-dark rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-1000 linear ${timerColor}`}
-                style={{ width: `${timerPct}%` }}
+                className={`h-full rounded-full transition-all duration-1000 ${timerColor}`}
+                style={{ width: `${timerPct}%`, transitionTimingFunction: 'linear' }}
               />
             </div>
+
+            {/* Milestone pop */}
+            {milestone && (
+              <div className="flex items-center justify-center gap-2 py-2 animate-bounce-in">
+                <span className="text-3xl">{milestone.emoji}</span>
+                <span className="text-[17px] font-black text-apple-label dark:text-apple-label-dark">{milestone.label}</span>
+              </div>
+            )}
 
             {/* Athlete card */}
             <div
@@ -321,45 +438,46 @@ export default function StreakGame() {
               `}
             >
               <div className="text-4xl mb-3">{athlete.emoji}</div>
-              <h2 className="text-[26px] font-black text-apple-label dark:text-apple-label-dark tracking-tight leading-tight">
+              <h2 className="text-[24px] font-black text-apple-label dark:text-apple-label-dark tracking-tight leading-tight">
                 {athlete.name}
               </h2>
-              <p className="text-[13px] text-apple-secondary dark:text-apple-secondary-dark mt-1">
-                {athlete.sport}
+              <p className="text-[12px] font-semibold uppercase tracking-wider text-apple-secondary dark:text-apple-secondary-dark mt-2">
+                {question.prompt}
               </p>
 
-              {/* Feedback overlay */}
-              {phase === 'correct' && (
+              {(phase === 'correct') && (
                 <div className="absolute inset-0 flex items-center justify-center animate-bounce-in pointer-events-none">
-                  <span className="text-6xl">✓</span>
+                  <span className="text-7xl opacity-20">✓</span>
                 </div>
               )}
               {(phase === 'wrong' || phase === 'timeout') && (
                 <div className="absolute inset-0 flex items-center justify-center animate-bounce-in pointer-events-none">
-                  <span className="text-6xl">{phase === 'timeout' ? '⏰' : '✗'}</span>
+                  <span className="text-7xl opacity-20">{phase === 'timeout' ? '⏰' : '✗'}</span>
                 </div>
               )}
             </div>
 
             {/* Timer label */}
-            <div className="text-center">
-              <span className={`text-[14px] font-semibold tabular-nums ${
-                timeLeft <= 3 ? 'text-apple-red dark:text-apple-red-dark' : 'text-apple-secondary dark:text-apple-secondary-dark'
+            <div className="text-center -mt-2">
+              <span className={`text-[13px] font-semibold tabular-nums ${
+                timeLeft <= 3 ? 'text-apple-red dark:text-apple-red-dark' :
+                timeLeft <= 5 ? 'text-apple-orange dark:text-apple-orange-dark' :
+                'text-apple-secondary dark:text-apple-secondary-dark'
               }`}>
-                {phase === 'question' ? `${timeLeft}s remaining` : phase === 'timeout' ? 'Time\'s up!' : ''}
+                {phase === 'question' ? `${timeLeft}s` : phase === 'timeout' ? "Time's up!" : ''}
               </span>
             </div>
 
             {/* Answer buttons */}
             <div className="grid grid-cols-2 gap-3">
-              {options.map((option) => (
+              {question.options.map((option) => (
                 <button
                   key={option}
                   onClick={() => handleAnswer(option)}
                   disabled={phase !== 'question'}
                   className={`
                     py-4 px-3 rounded-apple-lg border text-[15px] font-semibold
-                    transition-all duration-200 active:scale-95
+                    transition-all duration-200
                     ${getButtonStyle(option)}
                   `}
                 >
@@ -374,7 +492,7 @@ export default function StreakGame() {
         {showLeaderboard && leaderboard.length > 0 && (
           <div className="flex flex-col gap-2 animate-slide-up">
             <div className="flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-apple-label dark:text-apple-label-dark uppercase tracking-wider">
+              <p className="text-[13px] font-semibold uppercase tracking-wider text-apple-label dark:text-apple-label-dark">
                 🏆 Your Best Runs
               </p>
               <button
@@ -393,16 +511,14 @@ export default function StreakGame() {
                   } ${i % 2 === 0 ? 'bg-apple-card dark:bg-apple-card-dark' : 'bg-apple-bg dark:bg-apple-card2-dark'}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[14px] font-black text-apple-secondary dark:text-apple-secondary-dark w-5 text-right">
+                    <span className="text-[14px] w-5">
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
                     </span>
                     <span className="text-[15px] font-bold text-apple-label dark:text-apple-label-dark tabular-nums">
                       {entry.streak} streak
                     </span>
                   </div>
-                  <span className="text-[12px] text-apple-secondary dark:text-apple-secondary-dark">
-                    {entry.date}
-                  </span>
+                  <span className="text-[12px] text-apple-secondary dark:text-apple-secondary-dark">{entry.date}</span>
                 </div>
               ))}
             </div>
