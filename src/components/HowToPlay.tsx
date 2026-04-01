@@ -27,8 +27,8 @@ const STEPS = [
   },
   {
     icon: '🪙',
-    title: 'Earn Coins',
-    desc: 'Win games to earn coins. Use them for power-ups like extra hints (coming soon).',
+    title: 'Power-Ups',
+    desc: 'Earn coins by winning. Spend them on Sport Hint (40🪙) or Country Hint (60🪙) to reveal extra info when you\'re stuck.',
   },
   {
     icon: '📤',
