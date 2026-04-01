@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { PlayerStats } from '@/types/game';
 import { getLevelTitle } from '@/lib/storage';
 
@@ -19,18 +20,28 @@ export default function Header({ stats, onShowStats, onShowHowToPlay }: HeaderPr
     <header className="sticky top-0 z-40 safe-top">
       <div className="header-blur border-b border-apple-separator dark:border-apple-separator-dark">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Left: How to play */}
-          <button
-            onClick={onShowHowToPlay}
-            className="btn-icon"
-            aria-label="How to play"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M10 9v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="10" cy="6.5" r="0.75" fill="currentColor" />
-            </svg>
-          </button>
+          {/* Left: How to play + Streak link */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onShowHowToPlay}
+              className="btn-icon"
+              aria-label="How to play"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M10 9v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="10" cy="6.5" r="0.75" fill="currentColor" />
+              </svg>
+            </button>
+            <Link
+              href="/streak"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-apple-blue/10 dark:bg-apple-blue-dark/10 text-apple-blue dark:text-apple-blue-dark text-[12px] font-semibold"
+              aria-label="Streak mode"
+            >
+              <span>⚡</span>
+              <span className="hidden sm:inline">Streak</span>
+            </Link>
+          </div>
 
           {/* Center: Logo + level */}
           <div className="flex flex-col items-center gap-0.5">
