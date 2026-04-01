@@ -11,7 +11,7 @@ import {
   submitGuess,
   giveUp,
   processGameResult,
-  usePowerUp,
+  applyPowerUp,
 } from '@/lib/storage';
 import { getDailyAthlete, getDayNumber } from '@/data/athletes';
 import Header from './Header';
@@ -119,7 +119,7 @@ export default function GameBoard() {
 
   const handlePowerUp = useCallback((id: PowerUpId) => {
     if (!gameState || !stats) return;
-    const result = usePowerUp(id, gameState, stats);
+    const result = applyPowerUp(id, gameState, stats);
     if (!result) return;
     setGameState(result.gameState);
     setStats(result.stats);

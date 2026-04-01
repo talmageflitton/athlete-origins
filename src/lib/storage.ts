@@ -275,7 +275,7 @@ export function canUsePowerUp(
   return stats.coins >= cost;
 }
 
-export function usePowerUp(
+export function applyPowerUp(
   powerUpId: PowerUpId,
   gameState: GameState,
   stats: PlayerStats,
